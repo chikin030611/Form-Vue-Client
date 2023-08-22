@@ -15,8 +15,20 @@ defineProps({
       <a href="https://vitejs.dev/" target="_blank" rel="noopener">Vite</a> +
       <a href="https://vuejs.org/" target="_blank" rel="noopener">Vue 3</a>.
     </h3>
+    <button @click="sendMsg">Send</button>
   </div>
 </template>
+
+<script>
+import { socket, state } from '../socket';
+export default {
+  methods: {
+    sendMsg() {
+      socket.emit('sendMsg', 'Hello World!');
+    }
+  }
+}
+</script>
 
 <style scoped>
 h1 {
