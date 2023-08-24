@@ -1,24 +1,28 @@
 <template>
   <div class="container">
     <form @submit.prevent="onSubmit" class="form">
+      <label class="user">Current number of users: {{ connection }} </label>
       <label for="name">Name:</label>
       <input type="text" id="name" v-model="name" required> <br>
 
       <label for="email">Email:</label>
       <input type="email" id="email" v-model="email" required> <br>
-      <span v-if="email !== '' && !isValidEmail" class="error">Please enter a valid email address</span> <br>
-
-      <label for="age">Age:</label>
-      <input type="number" id="age" v-model="age" required> <br>
+      <span v-if="email !== '' && !isValidEmail" class="error" >Please enter a valid email address</span> <br>
 
       <label for="phone_num">Phone Number:</label>
-      <input type="text" id="phone_num" v-model="phone_num" required> <br>
-
-      <label for="dob">Date of Birth:</label>
-      <input type="date" id="dob" v-model="dob" required> <br>
-
-      <label for="address">Address:</label>
-      <input type="text" id="address" v-model="address" required> <br>
+      <input type="tel" id="phone_num" 
+        v-model="phone_num" 
+        maxlength="8" 
+        pattern="[2-3,5-7,9]{1}[0-9]{7}"
+        required> 
+        <br>
+      
+      <label>Date:</label>
+      <VDatePicker v-model="date" for="date" 
+        :min-date="new Date()" 
+        color="gray"
+        is24hr expanded is-required /> 
+      <br>
 
       <button type="submit" :disabled="isLoading || !isValidForm" class ="submit-button">Submit</button>
       <span v-if="isSubmitted" class="success">Form submitted successfully!</span>
@@ -27,64 +31,73 @@
 </template>
 
 <script>
-import { socket } from '../socket';
-export default {
-  data() {
-    return {
-      isLoading: false,
-      isSubmitted: false,
-      name: '',
-      email: '',
-      age: '',
-      phone_num: '',
-      dob: '',
-      address: '',
-    }
-  },
-  computed: {
-    isValidEmail() {
-      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      return emailPattern.test(this.email)
-    },
-    isValidForm() {
-      return this.name !== '' && this.email !== '' && this.isValidEmail && this.age !== '' && this.phone_num !== '' && this.dob !== '' && this.address !== ''
-    },
-  },
-  methods: {
-    onSubmit() {
-      this.isLoading = true
+import { ref } from 'vue';
+import { socket, state } from '../socket';
 
-      // Simulating asynchronous submission
-      setTimeout(() => {
-        socket.emit('log-response', {
-          name: this.name,
-          email: this.email,
-          age: this.age,
-          phone_num: this.phone_num,
-          dob: this.dob,
-          address: this.address,
-        })
-        this.isLoading = false
-        this.isSubmitted = true
-        this.resetForm()
-      }, 1500)
+export default {
+    data() {
+        return {
+            numOfUsers: 0,
+            visible: false,
+            isLoading: false,
+            isSubmitted: false,
+            name: '',
+            email: '',
+            phone_num: '',
+            date: '',
+        };
     },
-    resetForm() {
-      this.name = ''
-      this.email = ''
-      this.age = ''
-      this.phone_num = ''
-      this.dob = ''
-      this.address = ''
+    computed: {
+      connection() {
+        return state.numOfUsers;
+      },
+      isValidEmail() {
+          const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return emailPattern.test(this.email);
+      },
+      isValidForm() {
+          return this.name !== '' && this.email !== '' && this.isValidEmail // && this.age !== '' && this.dob !== ''
+          && this.phone_num !== '' && this.address !== '' && this.date !== '';
+      },
     },
-  },
+    methods: {
+        onSubmit() {
+            this.isLoading = true;
+            const date = ref(new Date());
+            // Simulating asynchronous submission
+            setTimeout(() => {
+                socket.emit('log-response', {
+                    name: this.name,
+                    email: this.email,
+                    phone_num: this.phone_num,
+                    date: this.date.toISOString().slice(0, 10),
+                });
+                this.isLoading = false;
+                this.isSubmitted = true;
+                this.resetForm();
+            }, 1500);
+        },
+        resetForm() {
+            this.name = '';
+            this.email = '';
+            this.phone_num = '';
+        },
+        
+    },
+    
 }
 </script>
 
 <style>
 .container {
-  max-width: 400px;
+  max-width: 600px;
   margin: 0 auto;
+
+}
+
+.user {
+  font-weight: bold;
+  text-align: right;
 }
 
 .form label {
@@ -110,11 +123,11 @@ export default {
 }
 
 .error {
-  color: white;
+  color: #F90B31;
 }
 
 .success {
-  color: green;
+  color: #3adca3;
   font-weight: bold;
 }
 </style>
