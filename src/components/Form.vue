@@ -2,8 +2,8 @@
   <div class="form-container">
     <form @submit.prevent="onSubmit" class="form">
       <label for="name">Name:</label>
-      <input type="text" id="name" v-model="name" required> 
-      <br>
+      <MazInput v-model="name" type="text" id="name" required size="md" />
+      <br />
 
       <label for="phoneNum">Phone Number:</label>
       <MazPhoneNumberInput
@@ -15,56 +15,89 @@
         @update="phoneResults = $event"
         :success="phoneResults?.isValid"
       />
-      <br>
+      <br />
 
       <label for="email">Email:</label>
-      <input type="email" id="email" v-model="email" required> <br>
-      <span v-if="email !== '' && !isValidEmail" class="error" >Please enter a valid email address</span> <br>
+      <MazInput
+        v-model="email"
+        type="email"
+        id="email"
+        required
+        size="md"
+        :error="email !== '' && !isValidEmail"
+        error-message="Please enter a valid email address"
+      />
+      <br />
 
-      <label for="numOfPersons">Number of Persons:</label>
-      <input type="number" id="numOfPersons" v-model="numOfPersons" required> <br>
-      
+      <label>Number of Persons</label>
+      <MazSelect
+        v-model="numOfPersons"
+        :options="[
+          { label: '1', value: '1' },
+          { label: '2', value: '2' },
+          { label: '3', value: '3' },
+          { label: '4', value: '4' },
+          { label: '5', value: '5' },
+        ]"
+        size="md"
+      />
+      <br />
+
       <label>Date:</label>
-      <DatePicker 
-        v-model="date" 
-        mode="dateTime"
+      <DatePicker
+        v-model="date"
+        mode="date"
         first-day-of-week="1"
         :rules="timeRules"
         timezone="Asia/Hong_Kong"
         :min-date="new Date()"
-        color="gray"
-        is24hr 
-        expanded 
+        is24hr
+        expanded
         is-required
-      /> 
-      <br>
-      
-      <button type="submit" :disabled="isLoading || !isValidForm" class ="submit-button">Submit</button>
-      <span v-if="isSubmitted" class="success">Form submitted successfully!</span>    </form>
+      />
+      <br />
+      <br />
+
+      <label>Time:</label>
+      <MazBtn @click="isOpen = true">See Timeslot</MazBtn>
+      <MazDialog v-model="isOpen" title="Timeslot Available"> </MazDialog>
+      <br />
+      <br />
+
+      <MazBtn type="submit" size="md" :disabled="isLoading || !isValidForm"
+        >Submit</MazBtn
+      >
+    </form>
   </div>
 </template>
 
 <script>
-import { ref } from 'vue';
-import { socket } from '../socket';
-import { DatePicker } from 'v-calendar';
-import MazPhoneNumberInput from 'maz-ui/components/MazPhoneNumberInput'
+import { ref } from "vue";
+import { socket } from "../socket";
+import { DatePicker } from "v-calendar";
+import MazPhoneNumberInput from "maz-ui/components/MazPhoneNumberInput";
+import MazSelect from "maz-ui/components/MazSelect";
+import MazInput from "maz-ui/components/MazInput";
+import MazBtn from "maz-ui/components/MazBtn";
+import MazDialog from "maz-ui/components/MazDialog";
 
 export default {
   data() {
     return {
+      isOpen: false,
       isLoading: false,
       isSubmitted: false,
-      name: '',
-      email: '',
-      phoneNum: '',
+      name: "",
+      email: "",
+      phoneNum: "",
       phoneResults: null,
-      numOfPersons: '',
-      date: '',
+      numOfPersons: "",
+      date: "",
+      time: "",
       timeRules: {
         hours: [9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
-        minutes: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
-      }
+        minutes: [0, 15, 30, 45],
+      },
     };
   },
   computed: {
@@ -72,12 +105,19 @@ export default {
       return state.numOfUsers;
     },
     isValidEmail() {
-        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailPattern.test(this.email);
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailPattern.test(this.email);
     },
     isValidForm() {
-        return this.name !== '' && this.email !== '' && this.isValidEmail
-        && this.phoneNum !== '' && this.numOfPersons !== '' && this.date !== '';
+      return (
+        this.name !== "" &&
+        this.email !== "" &&
+        this.isValidEmail &&
+        this.phoneNum !== "" &&
+        this.numOfPersons !== "" &&
+        this.date !== "" &&
+        this.time !== ""
+      );
     },
   },
   methods: {
@@ -86,14 +126,14 @@ export default {
       const date = ref(new Date());
       // Simulating asynchronous submission
       setTimeout(() => {
-        socket.emit('log-response', {
+        socket.emit("log-response", {
           name: this.name,
           email: this.email,
           phoneNum: this.phoneNum,
           numOfPersons: this.numOfPersons,
           // date: this.date.toISOString().slice(0, 10),
           date: this.date.toISOString().slice(0, 10),
-          time: this.date.toString().slice(16, 25)
+          time: this.time,
         });
         this.isLoading = false;
         this.isSubmitted = true;
@@ -102,18 +142,24 @@ export default {
       }, 1500);
     },
     redirectUser() {
-      this.$router.push('/success');
+      this.$router.push("/success");
     },
     resetForm() {
-      this.name = '';
-      this.email = '';
-      this.phoneNum = '';
-      this.numOfPersons = '';
+      this.name = "";
+      this.email = "";
+      this.phoneNum = "";
+      this.numOfPersons = "";
+      this.date = "";
+      this.time = "";
     },
   },
   components: {
     DatePicker,
     MazPhoneNumberInput,
+    MazSelect,
+    MazInput,
+    MazBtn,
+    MazDialog,
   },
 };
 </script>
@@ -125,8 +171,8 @@ export default {
 }
 
 .form label {
-    display: block;
-    margin-bottom: 5px;
+  display: block;
+  margin-bottom: 5px;
 }
 
 .form input {
@@ -135,6 +181,16 @@ export default {
   margin-bottom: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
+}
+
+.dropdown {
+  width: 100%; /* Adjust the width as needed */
+  font-size: 1rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  margin-top: 0.5rem;
+  padding: 0.3rem;
 }
 
 .submit-button {
@@ -147,12 +203,11 @@ export default {
 }
 
 .error {
-  color: #F90B31;
+  color: #f90b31;
 }
 
 .success {
   color: #3adca3;
   font-weight: bold;
 }
-
 </style>
