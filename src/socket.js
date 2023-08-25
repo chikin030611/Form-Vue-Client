@@ -17,7 +17,6 @@ export const socket = io("http://localhost:3000", {
 });
 
 socket.on('user connection', (numOfUsers) => {
-  console.log(state.numOfUsers);
   state.numOfUsers = numOfUsers;
 });
 

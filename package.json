@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",
+    "libphonenumber-js": "^1.10.41",
+    "maz-ui": "^3.9.0",
     "socket.io-client": "^4.7.2",
     "v-calendar": "^3.0.3",
     "vue": "^3.3.4",
